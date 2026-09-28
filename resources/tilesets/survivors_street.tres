@@ -1,0 +1,114 @@
+[gd_resource type="TileSet" format=3]
+
+[ext_resource type="Texture2D" path="res://art/tilesets/survivors_ground.png" id="1_n7km2"]
+[ext_resource type="Texture2D" path="res://art/tilesets/survivors_props.png" id="2_teb8k"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_nbklv"]
+resource_name = "Ground"
+texture = ExtResource("1_n7km2")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+0:0/0/custom_data_0 = "Asphalt"
+1:0/0 = 0
+1:0/0/custom_data_0 = "Cracked asphalt"
+2:0/0 = 0
+2:0/0/custom_data_0 = "Chipped asphalt"
+3:0/0 = 0
+3:0/0/custom_data_0 = "Oil stain"
+0:1/0 = 0
+0:1/0/custom_data_0 = "Pothole"
+1:1/0 = 0
+1:1/0/custom_data_0 = "Puddle"
+2:1/0 = 0
+2:1/0/custom_data_0 = "Autumn leaves"
+3:1/0 = 0
+3:1/0/custom_data_0 = "Gravel"
+0:2/0 = 0
+0:2/0/custom_data_0 = "Concrete paving"
+1:2/0 = 0
+1:2/0/custom_data_0 = "Cracked paving"
+2:2/0 = 0
+2:2/0/custom_data_0 = "Dirt and grit"
+3:2/0 = 0
+3:2/0/custom_data_0 = "Muted grass"
+0:3/0 = 0
+0:3/0/custom_data_0 = "Horizontal lane dash"
+1:3/0 = 0
+1:3/0/custom_data_0 = "Vertical lane dash"
+2:3/0 = 0
+2:3/0/custom_data_0 = "Crosswalk stripe"
+3:3/0 = 0
+3:3/0/custom_data_0 = "Drain"
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_i8k5s"]
+resource_name = "Props and cover"
+texture = ExtResource("2_teb8k")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-27.52, -12.16, 27.52, -12.16, 27.52, 12.16, -27.52, 12.16)
+0:0/0/custom_data_0 = "Concrete barrier horizontal"
+0:0/0/custom_data_1 = true
+1:0/0 = 0
+1:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-12.16, -27.52, 12.16, -27.52, 12.16, 27.52, -12.16, 27.52)
+1:0/0/custom_data_0 = "Concrete barrier vertical"
+1:0/0/custom_data_1 = true
+2:0/0 = 0
+2:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-25.6, -14.72, 25.6, -14.72, 25.6, 14.72, -25.6, 14.72)
+2:0/0/custom_data_0 = "Sandbags"
+2:0/0/custom_data_1 = true
+3:0/0 = 0
+3:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-19.2, -17.92, 19.2, -17.92, 19.2, 17.92, -19.2, 17.92)
+3:0/0/custom_data_0 = "Crate stack"
+3:0/0/custom_data_1 = true
+0:1/0 = 0
+0:1/0/custom_data_0 = "Brick rubble"
+1:1/0 = 0
+1:1/0/custom_data_0 = "Concrete rubble"
+2:1/0 = 0
+2:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-11.52, -11.52, 11.52, -11.52, 11.52, 11.52, -11.52, 11.52)
+2:1/0/custom_data_0 = "Rusty barrel"
+2:1/0/custom_data_1 = true
+3:1/0 = 0
+3:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-15.36, -14.72, 15.36, -14.72, 15.36, 14.72, -15.36, 14.72)
+3:1/0/custom_data_0 = "Tire stack"
+3:1/0/custom_data_1 = true
+0:2/0 = 0
+0:2/0/physics_layer_0/polygon_0/points = PackedVector2Array(-14.72, -26.88, 14.72, -26.88, 14.72, 26.88, -14.72, 26.88)
+0:2/0/custom_data_0 = "Wrecked compact car"
+0:2/0/custom_data_1 = true
+1:2/0 = 0
+1:2/0/physics_layer_0/polygon_0/points = PackedVector2Array(-25.6, -16.64, 25.6, -16.64, 25.6, 16.64, -25.6, 16.64)
+1:2/0/custom_data_0 = "Damaged bus shelter"
+1:2/0/custom_data_1 = true
+2:2/0 = 0
+2:2/0/physics_layer_0/polygon_0/points = PackedVector2Array(-5.76, 1.2799997, 5.76, 1.2799997, 5.76, 12.8, -5.76, 12.8)
+2:2/0/custom_data_0 = "Dead autumn tree"
+2:2/0/custom_data_1 = true
+3:2/0 = 0
+3:2/0/custom_data_0 = "Bush"
+0:3/0 = 0
+0:3/0/physics_layer_0/polygon_0/points = PackedVector2Array(-24.96, -21.76, 24.96, -21.76, 24.96, 21.76, -24.96, 21.76)
+0:3/0/custom_data_0 = "Kiosk roof"
+0:3/0/custom_data_1 = true
+1:3/0 = 0
+1:3/0/physics_layer_0/polygon_0/points = PackedVector2Array(-14.72, -14.72, 14.72, -14.72, 14.72, 14.72, -14.72, 14.72)
+1:3/0/custom_data_0 = "Roof vent"
+1:3/0/custom_data_1 = true
+2:3/0 = 0
+2:3/0/physics_layer_0/polygon_0/points = PackedVector2Array(-4.48, 11.52, 4.48, 11.52, 4.48, 20.48, -4.48, 20.48)
+2:3/0/custom_data_0 = "Streetlamp"
+2:3/0/custom_data_1 = true
+3:3/0 = 0
+3:3/0/custom_data_0 = "Broken pallet"
+
+[resource]
+resource_name = "Post-Soviet Street / Survivors"
+tile_size = Vector2i(64, 64)
+physics_layer_0/collision_layer = 1
+physics_layer_0/collision_mask = 0
+custom_data_layer_0/name = "tile_name"
+custom_data_layer_0/type = 4
+custom_data_layer_1/name = "blocks_movement"
+custom_data_layer_1/type = 1
+sources/0 = SubResource("TileSetAtlasSource_nbklv")
+sources/1 = SubResource("TileSetAtlasSource_i8k5s")

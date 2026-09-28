@@ -1,0 +1,30 @@
+Generator: built-in image_gen
+Reference: art/concepts/post-soviet-survivors.png
+
+GROUND ATLAS
+
+Use case: stylized-concept
+Asset type: production game tile atlas, square 1024 by 1024 pixels, exactly 4 columns by 4 rows, 16 equally sized square terrain cells, each 256 by 256 pixels, no gutters or margins. Use the reference image only for the muted post-Soviet wartime pixel-art palette and surface materials, not its scene composition.
+Primary request: a practical reusable terrain tile sheet for a top-down Godot Vampire Survivors-style game in a war-damaged post-Soviet city. Ground only: no buildings, characters, props, perspective, cast shadows, interface, text or labels.
+Camera: straight overhead orthographic material surfaces, aligned square grid.
+Style: crisp deliberate pixel art at an apparent 64 by 64 art-pixel resolution per cell enlarged cleanly to 256, large clear pixel clusters, subtle texture with dark neutral gray asphalt and dusty concrete. Flat even diffuse lighting. Not a photograph.
+Critical atlas layout, left to right:
+Row 1: plain asphalt; asphalt with fine hairline cracks; asphalt with sparse small chips; asphalt with a subdued centered oil stain.
+Row 2: asphalt with a small centered pothole; asphalt with a small centered gray-blue puddle; asphalt with a few scattered dry ochre leaves; asphalt with a few small gravel chips.
+Row 3: pale gray square concrete sidewalk paving; same paving with sparse cracks; compacted dark brown dirt and grit; muted sparse olive grass.
+Row 4: asphalt with ONE worn horizontal off-white road dash through the center; asphalt with ONE worn vertical off-white road dash through center; asphalt with ONE horizontal off-white pedestrian-crossing stripe; asphalt with a centered round iron manhole cover.
+All asphalt cells must use exactly the same average brightness and surface grain, and keep the outside 16 pixels as unobtrusive uninterrupted asphalt so variant cells join cleanly. Center the special details safely within their individual cell. Plain asphalt should be almost uniform and quietly granular without large cracks. No outlined tiles, no decorative tile edges, no grid lines, no beveled squares, no border, no padding. Fill the whole square image with this exact 4x4 evenly aligned atlas. This is a utilitarian game texture sheet, not a scene illustration.
+
+TRANSPARENT PROPS ATLAS
+
+Use case: stylized-concept
+Asset type: transparent game prop sprite atlas, square 1024 by 1024 pixels, EXACTLY 4 columns by 4 rows of equal 256 by 256 pixel cells. Sixteen separate sprites centered at x=128,384,640,896 and y=128,384,640,896.
+Primary request: reusable post-Soviet war-damaged street obstacle and scenery sprites for a top-down Godot survivor game. Use the reference image only as style/palette guidance. Background must be genuinely transparent alpha, no ground or colored backdrop. No characters.
+Camera: consistent elevated top-down 2D RPG view, roofs/tops visible, fronts facing screen bottom, no isometric diamond projection, all horizontal and vertical objects aligned to image axes.
+Style: crisp muted pixel art, visible 4-pixel clusters as if each cell were authored at64x64 and enlarged4x. Weathered gray concrete, brick, olive green, rust, faded blue, dull ochre autumn foliage. Match the reference setting. Even upper-left light, tiny compact shadows only.
+Exact contents by row left to right:
+Row1: horizontal concrete Jersey barricade with faded diagonal red-white hazard paint; vertical concrete Jersey barricade; horizontal low stack of olive sandbags; stack of two battered wooden supply crates.
+Row2: low pile of red brick rubble; low pile of gray broken concrete; one upright rusty steel barrel; short stack of black discarded tires.
+Row3: rusty wrecked compact Soviet-style car with its hood pointing toward image top, seen from above; damaged small bus shelter with a blue-gray flat roof and visible bench; one sparse dead autumn tree with a compact canopy and ochre leaves; one small dry olive scrub bush.
+Row4: little shuttered corrugated metal street kiosk with flat muted blue-gray roof viewed from above; square concrete rooftop ventilation unit; a bent single streetlamp with compact silhouette entirely inside its cell; one broken wooden shipping pallet.
+Each sprite must fit completely within its own cell with at least24 transparent pixels around it on ALL sides. Never cross into adjacent cells. Consistent centered alignment. Make the car and kiosk fill most of their cells; crate, barrel, tires and bush smaller. No ground tile under objects, no floating platforms, no frames, no guide lines, no cell borders, no labels, no text, no watermark, no UI, no swatches. A clean atlas of sixteen separate cutout game sprites on genuine transparency.

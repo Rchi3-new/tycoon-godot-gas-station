@@ -1,0 +1,19 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level/endless_city.gd" id="1_city"]
+[ext_resource type="TileSet" path="res://resources/tilesets/survivors_street.tres" id="2_tiles"]
+[ext_resource type="PackedScene" path="res://scenes/level/blocks/plaza.tscn" id="3_plaza"]
+[ext_resource type="PackedScene" path="res://scenes/level/blocks/parking.tscn" id="4_parking"]
+[ext_resource type="PackedScene" path="res://scenes/level/blocks/bus_stop.tscn" id="5_bus"]
+[ext_resource type="PackedScene" path="res://scenes/level/blocks/checkpoint.tscn" id="6_checkpoint"]
+[ext_resource type="PackedScene" path="res://scenes/level/blocks/park.tscn" id="7_park"]
+[ext_resource type="PackedScene" path="res://scenes/level/blocks/market.tscn" id="8_market"]
+[ext_resource type="PackedScene" path="res://scenes/level/blocks/ruins.tscn" id="9_ruins"]
+[ext_resource type="PackedScene" path="res://scenes/level/blocks/barricade.tscn" id="10_barricade"]
+
+[node name="EndlessCity" type="Node2D"]
+texture_filter = 1
+y_sort_enabled = true
+script = ExtResource("1_city")
+tile_set = ExtResource("2_tiles")
+block_patterns = Array[PackedScene]([ExtResource("3_plaza"), ExtResource("4_parking"), ExtResource("5_bus"), ExtResource("6_checkpoint"), ExtResource("7_park"), ExtResource("8_market"), ExtResource("9_ruins"), ExtResource("10_barricade")])
