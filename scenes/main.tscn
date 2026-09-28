@@ -1,9 +1,17 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/level/endless_city.tscn" id="2_city"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="3_player"]
 
 [node name="Main" type="Node2D"]
+texture_filter = 1
 script = ExtResource("1_main")
 
-[node name="Camera2D" type="Camera2D" parent="."]
-anchor_mode = 0
+[node name="World" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="EndlessCity" parent="World" node_paths=PackedStringArray("target") instance=ExtResource("2_city")]
+target = NodePath("../Player")
+
+[node name="Player" parent="World" instance=ExtResource("3_player")]
