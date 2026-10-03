@@ -2,6 +2,8 @@
 
 An editable Godot 4.6 starter arena based on the survivors concept art. It contains terrain, street props and environment collisions; characters, enemy waves and combat are separate game systems.
 
+The [city expansion](CITY_ASSETS.md) adds 43 sprites and 16 tram-track ground tiles, a 91-tile combined TileSet, six reusable modules and 18 native TileMapPatterns. Open `res://scenes/tram_tracks_showcase.tscn` for the tracks or `res://scenes/panel_apartment_views_showcase.tscn` for the five-storey apartment views. This page describes the original 32-tile arena set.
+
 ## Open and paint
 
 1. Open `res://scenes/survivors_arena.tscn` in Godot.

@@ -8,6 +8,8 @@ const BASE_TILESET := "res://resources/tilesets/survivors_street.tres"
 const CITY_TILESET := "res://resources/tilesets/survivors_city.tres"
 const SHOWCASE := "res://scenes/city_patterns_showcase.tscn"
 const PREVIEW_SCRIPT := "res://scripts/survivors_map_preview.gd"
+const TrackTiles = preload("res://scripts/tools/tram_track_tiles.gd")
+const ApartmentViews = preload("res://scripts/tools/panel_apartment_view_tiles.gd")
 const GRID := Vector2i(12, 12)
 const CELL_SIZE := 64
 const CONNECTORS: Array[Vector2i] = [
@@ -15,7 +17,7 @@ const CONNECTORS: Array[Vector2i] = [
 	Vector2i(0, 5), Vector2i(0, 6), Vector2i(11, 5), Vector2i(11, 6),
 ]
 const IDS := ["apartment_courtyard", "trolleybus_stop", "market_corner", "city_entrance", "roadside_checkpoint", "playground"]
-const TITLES := ["01  APARTMENT COURTYARD", "02  TROLLEYBUS STOP", "03  MARKET CORNER", "04  CITY ENTRANCE", "05  ROADSIDE CHECKPOINT", "06  PLAYGROUND"]
+const TITLES := ["01  APARTMENT COURTYARD", "02  BUS STOP", "03  MARKET CORNER", "04  CITY ENTRANCE", "05  ROADSIDE CHECKPOINT", "06  PLAYGROUND"]
 const STREET_NAMES := [
 	"Bench", "Dumpster", "Mailbox", "Payphone",
 	"Bicycle rack", "Tire planter", "Fruit stand", "Plastic crates",
@@ -28,8 +30,8 @@ const SIGN_NAMES := [
 	"Pedestrian crossing sign", "Parking sign", "Stop sign", "Speed limit 40",
 	"Keep right sign", "Mira street plaque", "Notice board", "Weathered blue billboard",
 ]
-const ARCHITECTURE_NAMES := ["Panel apartment block", "Shell-damaged apartment block", "Small grocer", "Garage pair"]
-const TRANSIT_NAMES := ["Blue-white trolleybus", "Rusty yellow tram", "Long bus shelter", "Overhead trolley wires"]
+const ARCHITECTURE_NAMES := ["Five-storey concrete-panel apartment", "Damaged five-storey concrete-panel apartment", "Small grocer", "Garage pair"]
+const TRANSIT_NAMES := ["Yellow city bus", "Cream-and-red tram", "Long bus shelter", "Overhead trolley wires"]
 
 var failed := false
 
@@ -56,6 +58,12 @@ func _build() -> void:
 		quit(1)
 		return
 	_configure_collisions(street, signs, architecture, transit)
+	if TrackTiles.add_to_tileset(tile_set) != OK:
+		quit(1)
+		return
+	if ApartmentViews.add_to_tileset(tile_set) != OK:
+		quit(1)
+		return
 	if not _save(tile_set, CITY_TILESET):
 		quit(1)
 		return
@@ -72,7 +80,7 @@ func _build() -> void:
 	_save_scene(showcase, SHOWCASE)
 	showcase.free()
 	if not failed:
-		print("Saved city TileSet: 72 tiles across six sources (40 new city assets).")
+		print("Saved city TileSet: 91 tiles across ten sources (40 city assets, 16 track tiles and three apartment views).")
 		print("Saved six 12x12 modular scenes, 18 native TileMapPatterns and %s" % SHOWCASE)
 	quit(1 if failed else 0)
 
@@ -96,8 +104,10 @@ func _add_atlas(tile_set: TileSet, source_id: int, basename: String, grid_size: 
 			var data := source.get_tile_data(coords, 0)
 			data.set_custom_data("tile_name", names[y * grid_size + x])
 			data.set_custom_data("blocks_movement", false)
-			# Signs render above nearby architecture when used as wall-mounted fascia.
-			data.z_index = 1 if source_id == 3 else 0
+			# All props share character Z and sort by the lower part of their artwork.
+			# This also lets wall fascia sort in front of its nearby building facade.
+			data.z_index = 0
+			data.y_sort_origin = roundi(region_size * 0.35)
 	return source
 
 
@@ -154,15 +164,16 @@ func _make_module(pattern_id: String, style: int, tile_set: TileSet) -> Node2D:
 	var module := Node2D.new()
 	module.name = pattern_id.to_pascal_case()
 	module.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	module.y_sort_enabled = true
 	module.set_meta("pattern_id", pattern_id)
 	module.set_meta("grid_dimensions", GRID)
 	module.set_meta("footprint_cells", GRID)
 	module.set_meta("world_cell_size", CELL_SIZE)
 	module.set_meta("connector_cells", CONNECTORS)
 	module.set_meta("description", "Stamp all three layers at the same origin. Rows 5/6 and columns 5/6 remain open for aligned module connections.")
-	var ground := _layer(module, "Ground", tile_set, 0)
-	var details := _layer(module, "Details", tile_set, 1)
-	var props := _layer(module, "Props", tile_set, 2)
+	var ground := _layer(module, "Ground", tile_set, -10)
+	var details := _layer(module, "Details", tile_set, -9)
+	var props := _layer(module, "Props", tile_set, 0)
 	ground.collision_enabled = false
 	details.collision_enabled = false
 	_paint_ground(ground, details, style)
@@ -179,6 +190,7 @@ func _layer(module: Node2D, layer_name: String, tile_set: TileSet, depth: int) -
 	layer.name = layer_name
 	layer.tile_set = tile_set
 	layer.z_index = depth
+	layer.y_sort_enabled = layer_name == "Props"
 	layer.navigation_enabled = false
 	_attach(module, layer, module)
 	return layer
@@ -277,11 +289,15 @@ func _save_patterns(module: Node2D, pattern_id: String) -> void:
 		pattern.resource_name = "%s / %s" % [pattern_id.capitalize(), layer_name]
 		for cell in layer.get_used_cells():
 			pattern.set_cell(cell, layer.get_cell_source_id(cell), layer.get_cell_atlas_coords(cell), layer.get_cell_alternative_tile(cell))
-		# Preserve leading/trailing empty cells so every layer stamps at one origin.
-		pattern.set_size(GRID)
+		# Godot 4.6 serializes tile_data, not the value assigned by set_size().
+		# Cells retain their exact coordinates, including leading empty space;
+		# the persisted footprint declares the trailing space used by generators.
+		# get_size() after reload is max(occupied_cell + Vector2i.ONE), not GRID.
 		pattern.set_meta("pattern_id", pattern_id)
 		pattern.set_meta("layer_name", layer_name)
 		pattern.set_meta("grid_dimensions", GRID)
+		pattern.set_meta("footprint_cells", GRID)
+		pattern.set_meta("origin_cells", Vector2i.ZERO)
 		pattern.set_meta("world_cell_size", CELL_SIZE)
 		pattern.set_meta("tile_set_path", CITY_TILESET)
 		_save(pattern, "res://resources/patterns/%s_%s.tres" % [pattern_id, layer_name.to_lower()])
@@ -291,6 +307,7 @@ func _make_showcase() -> Node2D:
 	var showcase := Node2D.new()
 	showcase.name = "CityPatternsShowcase"
 	showcase.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	showcase.y_sort_enabled = true
 	var map_size := Vector2(2880.0, 2016.0)
 	showcase.set_script(load(PREVIEW_SCRIPT))
 	showcase.set("map_size", map_size)
@@ -299,7 +316,7 @@ func _make_showcase() -> Node2D:
 	background.name = "GalleryBackground"
 	background.polygon = PackedVector2Array([Vector2.ZERO, Vector2(map_size.x, 0.0), map_size, Vector2(0.0, map_size.y)])
 	background.color = Color("171e21")
-	background.z_index = -1
+	background.z_index = -20
 	_attach(showcase, background, showcase)
 	_label(showcase, "MODULAR CITY BLOCKS", Vector2(96.0, 24.0), 48, Color("e4e6d9"))
 	_label(showcase, "12 x 12 cells per module  /  64px grid  /  two-cell connecting streets", Vector2(96.0, 88.0), 26, Color("98aaa9"))

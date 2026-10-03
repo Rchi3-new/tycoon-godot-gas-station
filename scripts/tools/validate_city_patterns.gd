@@ -13,8 +13,9 @@ const GRID := Vector2i(12, 12)
 const CELL_SIZE := 64
 const ACTOR_RADIUS := 12.0
 const CARDINALS := [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
-const SOURCE_GRIDS := [4, 4, 4, 4, 2, 2]
-const SOURCE_REGIONS := [64, 64, 64, 128, 256, 256]
+const SOURCE_GRIDS := [4, 4, 4, 4, 2, 2, 4, 1, 1, 1]
+const SOURCE_REGIONS := [64, 64, 64, 128, 256, 256, 64, 256, 192, 192]
+const TRACK_MASKS := [10, 5, 15, 0, 3, 9, 6, 12, 10, 5, 10, 5, 10, 5, 10, 5]
 
 var failures: Array[String] = []
 var tile_set: TileSet
@@ -40,20 +41,25 @@ func _validate() -> void:
 		return
 	for pattern_id in PATTERN_IDS:
 		await _validate_module(pattern_id)
+	_validate_track_preview()
+	await _validate_apartment_preview()
 	_check(verified_large_sources.has(4), "No architecture tile produced an actual collision hit.")
 	_check(verified_large_sources.has(5), "No transit tile produced an actual collision hit.")
+	for view_source in [7, 8, 9]:
+		_check(verified_large_sources.has(view_source), "Apartment view source %d produced no actual collision hit." % view_source)
 	_finish()
 
 
 func _validate_atlases() -> void:
 	_check(tile_set.tile_size == Vector2i.ONE * CELL_SIZE, "City TileSet must use a 64px grid.")
-	_check(tile_set.get_source_count() == 6, "Expected six city atlas sources.")
+	_check(tile_set.get_source_count() == 10, "Expected ten city atlas sources.")
 	_check(tile_set.get_physics_layers_count() > 0, "Environment physics layer is missing.")
 	if tile_set.get_physics_layers_count() == 0:
 		return
 	_check(tile_set.get_physics_layer_collision_layer(0) == 1, "Environment colliders must occupy layer 1.")
 	_check(tile_set.get_custom_data_layer_by_name("tile_name") >= 0, "tile_name custom data is missing.")
 	_check(tile_set.get_custom_data_layer_by_name("blocks_movement") >= 0, "blocks_movement custom data is missing.")
+	_check(tile_set.get_custom_data_layer_by_name("track_connections") >= 0, "track_connections custom data is missing.")
 	if not failures.is_empty():
 		return
 	var total := 0
@@ -75,7 +81,9 @@ func _validate_atlases() -> void:
 			_fail("Source %d texture cannot be read." % source_id)
 			continue
 		if pixels.is_compressed():
-			_check(pixels.decompress() == OK, "Source %d texture cannot be decompressed." % source_id)
+			if pixels.decompress() != OK:
+				_fail("Source %d texture cannot be decompressed." % source_id)
+				continue
 		for y in side:
 			for x in side:
 				var coords := Vector2i(x, y)
@@ -91,16 +99,141 @@ func _validate_atlases() -> void:
 				_check(data.texture_origin == Vector2i.ZERO, "Unexpected texture offset in source %d tile %s." % [source_id, coords])
 				var blocks: bool = data.get_custom_data("blocks_movement")
 				_check(blocks == (data.get_collision_polygons_count(0) > 0), "Collision flag disagrees with polygon data for source %d tile %s." % [source_id, coords])
-				if source_id >= 4:
+				if source_id == 4 or source_id == 5 or source_id >= 7:
 					_check(blocks, "Large architecture/transit source %d tile %s has no footprint collider." % [source_id, coords])
+				elif source_id == 6:
+					_check(not blocks, "Tram track ground must remain passable at %s." % coords)
+					_check(data.get_custom_data("track_connections") == TRACK_MASKS[y * 4 + x], "Tram track edge mask is incorrect at %s." % coords)
 				var region: Rect2i = source.get_tile_texture_region(coords)
 				if not Rect2i(Vector2i.ZERO, pixels.get_size()).encloses(region):
 					_fail("Source %d tile %s samples outside its image." % [source_id, coords])
 					continue
-				if source_id > 0:
+				if source_id == 6:
+					_validate_opaque_ground(pixels, region, coords)
+				elif source_id > 0:
 					_validate_alpha(pixels, region, source_id, coords)
-	_check(total == 72, "Expected 72 valid registered atlas tiles; found %d." % total)
-	print("Atlas references checked: %d tiles across six sources; prop alpha checked per tile." % total)
+	_check(total == 91, "Expected 91 valid registered atlas tiles; found %d." % total)
+	print("Atlas references checked: %d tiles across ten sources; prop alpha and opaque track ground checked per tile." % total)
+
+
+func _validate_apartment_preview() -> void:
+	var packed: PackedScene = load("res://scenes/panel_apartment_views_showcase.tscn") as PackedScene
+	if packed == null:
+		_fail("Apartment views showcase is missing.")
+		return
+	var preview: Node2D = packed.instantiate() as Node2D
+	root.add_child(preview)
+	var apartments: TileMapLayer = preview.get_node_or_null("Apartments") as TileMapLayer
+	if apartments == null:
+		_fail("Apartment views showcase needs an Apartments TileMapLayer.")
+		preview.free()
+		return
+	_check(apartments.tile_set == tile_set, "Apartment views do not use the saved shared TileSet.")
+	_check(preview.y_sort_enabled and apartments.y_sort_enabled and apartments.z_index == 0, "Apartment views must sort at character Z using Y sorting.")
+	_check(apartments.get_used_cells().size() == 4, "Apartment preview must show exactly four views.")
+	var expected_sources: Array[int] = [4, 7, 8, 9]
+	var seen_sources: Dictionary[int, bool] = {}
+	var dimensions: Vector2i = preview.get_meta("grid_dimensions", Vector2i.ZERO)
+	var bounds: Rect2 = Rect2(Vector2.ZERO, Vector2(dimensions) * CELL_SIZE)
+	for cell in apartments.get_used_cells():
+		var source_id: int = apartments.get_cell_source_id(cell)
+		seen_sources[source_id] = true
+		_check(expected_sources.has(source_id) and apartments.get_cell_atlas_coords(cell) == Vector2i.ZERO, "Apartment preview contains an unexpected source or atlas tile.")
+		var center: Vector2 = apartments.map_to_local(cell)
+		_check(bounds.encloses(Rect2(center - Vector2(128, 128), Vector2(256, 256))), "Apartment view artwork extends outside the preview.")
+		if source_id >= 7:
+			var data: TileData = apartments.get_cell_tile_data(cell)
+			if data == null:
+				_fail("Apartment view source %d has no tile data." % source_id)
+				continue
+			_check(data.y_sort_origin >= 60 and data.y_sort_origin <= 120, "Apartment view sorting origin should sit near the sprite base.")
+			for polygon_index in data.get_collision_polygons_count(0):
+				var polygon: PackedVector2Array = data.get_collision_polygon_points(0, polygon_index)
+				var top: float = 128.0
+				var bottom: float = -128.0
+				for point in polygon:
+					top = minf(top, point.y)
+					bottom = maxf(bottom, point.y)
+					_check(absf(point.x) <= 128.0 and point.y >= 60.0 and point.y <= 128.0, "Apartment view collider must fit within the ground-level sprite base.")
+				_check(bottom - top <= 40.0, "Apartment view collider covers the facade instead of its narrow base.")
+	for source_id in expected_sources:
+		_check(seen_sources.has(source_id), "Apartment preview is missing source %d." % source_id)
+	await physics_frame
+	await physics_frame
+	var space: PhysicsDirectSpaceState2D = preview.get_world_2d().direct_space_state
+	_validate_physics_hits(space, apartments, "panel_apartment_views")
+	preview.free()
+	await physics_frame
+	print("Apartment preview checked: front/rear/left/right, base sorting and actual footprint collisions.")
+
+
+func _validate_opaque_ground(pixels: Image, region: Rect2i, coords: Vector2i) -> void:
+	for y in range(region.position.y, region.end.y):
+		for x in range(region.position.x, region.end.x):
+			if pixels.get_pixel(x, y).a < 0.99:
+				_fail("Tram track ground tile %s contains a transparent gap." % coords)
+				return
+
+
+func _validate_track_preview() -> void:
+	var packed := load("res://scenes/tram_tracks_showcase.tscn") as PackedScene
+	if packed == null:
+		_fail("Tram track showcase scene is missing.")
+		return
+	var preview := packed.instantiate() as Node2D
+	var tracks := preview.get_node_or_null("JoinedTracks") as TileMapLayer
+	var palette := preview.get_node_or_null("TilePalette") as TileMapLayer
+	if tracks == null or palette == null:
+		_fail("Tram track showcase must contain JoinedTracks and TilePalette TileMapLayers.")
+		preview.free()
+		return
+	_check(tracks.tile_set == tile_set and palette.tile_set == tile_set, "Track preview does not reference the expanded shared TileSet.")
+	_check(not tracks.collision_enabled and not palette.collision_enabled, "Track preview ground must not enable collision.")
+	var field: Rect2i = preview.get_meta("track_field", Rect2i())
+	var terminals: Array = preview.get_meta("track_terminals", [])
+	_check(field.has_area() and tracks.get_used_cells().size() == field.get_area(), "Track demo asphalt panel has missing ground cells.")
+	_check(terminals.size() == 4, "Track demo must declare four through-route endpoints.")
+	var palette_coords: Dictionary[Vector2i, bool] = {}
+	for cell in palette.get_used_cells():
+		_check(palette.get_cell_source_id(cell) == 6, "Palette contains a non-track tile.")
+		palette_coords[palette.get_cell_atlas_coords(cell)] = true
+	_check(palette_coords.size() == 16, "Track palette does not display all 16 distinct tiles.")
+	var connected: Dictionary[Vector2i, int] = {}
+	for cell in tracks.get_used_cells():
+		_check(tracks.get_cell_source_id(cell) == 6 and field.has_point(cell), "Joined track panel contains an invalid source or out-of-bounds tile.")
+		var data := tracks.get_cell_tile_data(cell)
+		if data != null:
+			var mask: int = data.get_custom_data("track_connections")
+			if mask != 0:
+				connected[cell] = mask
+	var edges := [[Vector2i.UP, 1, 4], [Vector2i.RIGHT, 2, 8], [Vector2i.DOWN, 4, 1], [Vector2i.LEFT, 8, 2]]
+	for cell in connected:
+		for edge in edges:
+			var outward_mask: int = edge[1]
+			var reciprocal_mask: int = edge[2]
+			if (connected[cell] & outward_mask) != 0:
+				var neighbor: Vector2i = cell + Vector2i(edge[0])
+				var matches: bool = connected.has(neighbor) and (connected[neighbor] & reciprocal_mask) != 0
+				var terminal_exit: bool = terminals.has(cell) and not field.has_point(neighbor)
+				_check(matches or terminal_exit, "Track tile %s has an unmatched edge toward %s." % [cell, neighbor])
+	_check(not connected.is_empty(), "Track demo contains no connected rail tiles.")
+	if not connected.is_empty():
+		var queue: Array[Vector2i] = [connected.keys()[0]]
+		var reached: Dictionary[Vector2i, bool] = {queue[0]: true}
+		var cursor := 0
+		while cursor < queue.size():
+			var cell: Vector2i = queue[cursor]
+			cursor += 1
+			for edge in edges:
+				var neighbor: Vector2i = cell + Vector2i(edge[0])
+				var outward_mask: int = edge[1]
+				var reciprocal_mask: int = edge[2]
+				if (connected[cell] & outward_mask) != 0 and connected.has(neighbor) and (connected[neighbor] & reciprocal_mask) != 0 and not reached.has(neighbor):
+					reached[neighbor] = true
+					queue.append(neighbor)
+		_check(reached.size() == connected.size(), "Joined track routes contain disconnected sections.")
+	print("Track preview checked: 16 palette entries, %d joined track cells and four route endpoints." % connected.size())
+	preview.free()
 
 
 func _validate_alpha(pixels: Image, region: Rect2i, source_id: int, coords: Vector2i) -> void:
@@ -201,7 +334,14 @@ func _validate_saved_pattern(layer: TileMapLayer, pattern_id: String) -> void:
 	if pattern == null:
 		_fail("Missing saved TileMapPattern: %s." % path)
 		return
-	_check(pattern.get_size() == GRID, "%s has an incorrect declared pattern size." % path)
+	# TileMapPattern serializes occupied cells, not an explicit padded size.
+	# Preserve the module footprint in metadata while verifying exact stamp offsets.
+	var occupied_end := Vector2i.ZERO
+	for occupied_cell in pattern.get_used_cells():
+		occupied_end = occupied_end.max(occupied_cell + Vector2i.ONE)
+	_check(pattern.get_size() == occupied_end, "%s has incorrect occupied extents." % path)
+	_check(pattern.get_meta("footprint_cells", Vector2i.ZERO) == GRID, "%s has an incorrect declared footprint." % path)
+	_check(pattern.get_meta("origin_cells", Vector2i(-1, -1)) == Vector2i.ZERO, "%s has an incorrect local stamp origin." % path)
 	_check(pattern.get_meta("tile_set_path", "") == TILESET_PATH, "%s has no correct TileSet reference metadata." % path)
 	_check(pattern.get_meta("pattern_id", "") == pattern_id, "%s pattern_id metadata is wrong." % path)
 	_check(pattern.get_meta("layer_name", "") == str(layer.name), "%s layer metadata is wrong." % path)
@@ -322,7 +462,7 @@ func _fail(message: String) -> void:
 
 func _finish() -> void:
 	if failures.is_empty():
-		print("PASS: 72 atlas tiles; per-tile prop alpha; six full module footprints; 18 aligned saved patterns; %d collider hits; %d connectors; %d actual 24px-circle sweeps." % [verified_blockers, verified_connectors, verified_sweeps])
+		print("PASS: 91 atlas tiles; prop alpha and opaque track ground; joined track routes; four apartment views; six full module footprints; 18 aligned saved patterns; %d collider hits; %d connectors; %d actual 24px-circle sweeps." % [verified_blockers, verified_connectors, verified_sweeps])
 		print("Routes validate sampled straight circle sweeps and connector seams, not exhaustive character motion or another actor size.")
 		quit(0)
 	else:

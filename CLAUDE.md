@@ -10,10 +10,10 @@ F5 runs `scenes/main.tscn`: a placeholder player (`move_*` actions: WASD, arrows
 
 ## Commands
 
-The Godot editor isn't on PATH. On this machine it is at `C:\Users\gtuch\Downloads\Godot_v4.6.1-stable_mono_win64\` (use the `_console.exe` build for CLI output).
+The Godot editor isn't on PATH. On this machine it is at `D:\Godot_v4.6.1-stable_mono_win64\` (use the `_console.exe` build for CLI output).
 
 ```sh
-GODOT="/c/Users/gtuch/Downloads/Godot_v4.6.1-stable_mono_win64/Godot_v4.6.1-stable_mono_win64_console.exe"
+GODOT="/d/Godot_v4.6.1-stable_mono_win64/Godot_v4.6.1-stable_mono_win64_console.exe"
 "$GODOT" --headless --path . --import   # re-import; also registers new class_name scripts, run it after adding one
 "$GODOT" --path .                        # play
 "$GODOT" -e --path .                     # open in editor
@@ -23,7 +23,7 @@ GODOT="/c/Users/gtuch/Downloads/Godot_v4.6.1-stable_mono_win64/Godot_v4.6.1-stab
 "$GODOT" --path . --script res://scripts/tools/capture_endless_city.gd -- --out=<absolute dir>   # PNG previews; needs a display
 ```
 
-Everything in `scripts/tools/` is an `extends SceneTree` script run with `--script`. The validators check real physics queries and exit non-zero on failure. There is no unit-test framework. `build_city_patterns.gd` and `validate_city_patterns.gd` expect `art/tilesets/city_*.png` atlases that aren't in the repo, so they can't run.
+Everything in `scripts/tools/` is an `extends SceneTree` script run with `--script`. The validators check real physics queries and exit non-zero on failure. There is no unit-test framework. `build_city_patterns.gd` and `validate_city_patterns.gd` build/check the separate city asset expansion; its four `art/tilesets/city_*.png` atlases are included with required `.import` size limits. See `art/tilesets/CITY_ASSETS.md` for the atlas and native-pattern contract. The six 12x12 modules are separate from the endless city's 18x18 BlockPattern scenes. Native patterns store `footprint_cells` metadata because TileMapPattern does not serialize empty trailing extents.
 
 ## Architecture
 

@@ -2,6 +2,8 @@
 
 An editable post-Soviet survivors arena is available in `scenes/survivors_arena.tscn` (Godot 4.6). Open it and press F6 to preview, pan and zoom. See [the tilemap guide](art/tilesets/README.md) for painting, atlas coordinates, collisions and regeneration.
 
+The [city asset expansion](art/tilesets/CITY_ASSETS.md) adds 43 transparent sprites, Cyrillic signs, five-storey concrete-panel apartments with front/rear/left/right views, a yellow bus, a cream-and-red tram and everyday street objects, plus 16 tram-track ground tiles. Open `scenes/city_patterns_showcase.tscn` with F6 to inspect six reusable modules, `scenes/panel_apartment_views_showcase.tscn` for apartment views, or `scenes/tram_tracks_showcase.tscn` for connected tracks; native per-layer patterns are in `resources/patterns/`.
+
 ## Endless city
 
 Press **F5** to walk an endless city in the style of Vampire Survivors, using a placeholder survivor (WASD, arrows or a gamepad).
